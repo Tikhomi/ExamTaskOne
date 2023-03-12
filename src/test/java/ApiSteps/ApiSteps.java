@@ -3,6 +3,8 @@ package ApiSteps;
 import io.qameta.allure.Step;
 import io.restassured.response.Response;
 import org.json.JSONObject;
+import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -20,7 +22,6 @@ public class ApiSteps {
     public static String speciesMorty;
     public static String nameLocationMorty;
     public static String nameLocation;
-    public static String Body1;
     public static String nameCheck1;
     public static String jobCheck1;
     public static String nameCheck2;
@@ -83,31 +84,43 @@ public class ApiSteps {
         nameLocation = location.get("name").toString();
         speciesLast = new JSONObject(gettingLocationPerson.getBody().asString()).get("species").toString();
     }
-    @Step("Заполнение json")
-    public static void fillingBody() throws IOException {
-        body = new JSONObject(new String(Files.readAllBytes(Paths.get("src/test/resources/create.json"))));
-        body.put("name", "Tomato");
-        body.put("job", "Eat market");
-        Body1 = body.toString();
+    @Step("Проверка расы")
+    public static void raceCheck(){
+        Assertions.assertEquals(speciesMorty, speciesLast);
+    }
+
+    @Step("Проверка локации")
+    public static void locationCheck(){
+        try {
+            Assertions.assertEquals(nameLocation, nameLocationMorty,"Локации не совпадают!");
+        } catch (Throwable t) {
+            throw new RuntimeException("Failed to read file");
+        }
     }
 
     @Step("Отправка на регресс")
-    public static void sendRequest() {
+    public static void sendRequest() throws IOException {
+        body = new JSONObject(new String(Files.readAllBytes(Paths.get("src/test/resources/json/create.json"))));
+        body.put("name", "Tomato");
+        body.put("job", "Eat market");
         Response sendingRequest = given()
                 .header("Content-type", "application/json")
                 .baseUri("https://reqres.in/api")
-                .body(Body1)
+                .body(body.toString())
                 .when()
                 .post("/users")
                 .then()
                 .statusCode(201)
                 .extract()
                 .response();
-        nameCheck1 = (new JSONObject(sendingRequest.getBody().asString()).get("name").toString());
-        jobCheck1 = (new JSONObject(sendingRequest.getBody().asString()).get("job").toString());
-        String idCreate =(new JSONObject(sendingRequest.getBody().asString()).get("id").toString());
-        String createdAt = (new JSONObject(sendingRequest.getBody().asString()).get("createdAt").toString());
-        nameCheck2 = (body.get("name").toString());
-        jobCheck2 = (body.get("job").toString());
+        nameCheck1 = (new JSONObject(sendingRequest.getBody().asString()).get("name").toString()).toLowerCase();
+        jobCheck1 = (new JSONObject(sendingRequest.getBody().asString()).get("job").toString()).toLowerCase();
+        nameCheck2 = (body.get("name").toString()).toLowerCase();
+        jobCheck2 = (body.get("job").toString()).toLowerCase();
+    }
+    @Step("Проверка результатов")
+    public static void checkData(){
+        Assertions.assertEquals( nameCheck1, nameCheck2,"Значение ключа name не совпадают!");
+        Assertions.assertEquals( jobCheck1, jobCheck2,"Значение ключа job не совпадают!");
     }
 }

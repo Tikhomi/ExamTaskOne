@@ -1,4 +1,4 @@
-package Tests;
+package Test;
 
 import Hooks.ApiHook;
 import io.qameta.allure.Epic;
@@ -19,19 +19,14 @@ public class ApiTest extends ApiHook {
         getEpisode();
         getIdPerson();
         getLocationPerson();
-        Assert.assertEquals("Расы не совпадают!", speciesMorty, speciesLast);
-        try {
-            Assert.assertEquals("Локации не совпадают!", nameLocation, nameLocationMorty);
-        } catch (Throwable t) {
-        }
+        raceCheck();
+        locationCheck();
     }
 
     @DisplayName("Создание пользователя")
     @Test
     public void task2 () throws IOException {
-        fillingBody();
         sendRequest();
-        Assert.assertEquals("Значение ключа name не совпадают!", nameCheck1, nameCheck2);
-        Assert.assertEquals("Значение ключа job не совпадают!", jobCheck1, jobCheck2);
+        checkData();
     }
 }
